@@ -33,7 +33,7 @@
       elem.onclick = () => {
         const text = document
           .querySelector(
-            'header > form > div.HeaderForm-InputWrapper > input'
+            'header > form > div.HeaderForm-InputWrapper > div > input'
           )
           .getAttribute('value')
           .replace(/\s+date:.+/, '');
