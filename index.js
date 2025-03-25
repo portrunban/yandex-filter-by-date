@@ -21,72 +21,57 @@
     }
   
     function getDate(mlsc) {
-      const date = new Date(new Date() - mlsc);
-      const month = ('0' + (date.getMonth() + 1)).slice(-2);
-      const day = ('0' + date.getDate()).slice(-2);
-      const year = date.getFullYear();
-  
-      return `${year}${month}${day}`;
+      const date = new Date(Date.now() - mlsc);
+      return date.toISOString().slice(0,10).replace(/-/g,'');
     }
   
     function addEventChangeParamsUrl(elem, mlsc) {
       elem.onclick = () => {
-        const text = document
-          .querySelector(
-            'header > form > div.HeaderForm-InputWrapper > div > input'
-          )
-          .getAttribute('value')
-          .replace(/\s+date:.+/, '');
+        const input = document.querySelector('header > form > div.HeaderForm-InputWrapper > div > input');
+        const text = input.getAttribute('value').replace(/\s+date:.+/, '');
         const filter = `${getDate(mlsc)}..${getDate(0)}`;
-        const url = window.location.href.replace(/\?.+/, '');
-        const fullUrl = `${url}?text=${text} date:${filter}&lr=2`;
-        window.location.replace(fullUrl);
+        const baseUrl = window.location.href.split('?')[0];
+        window.location.replace(`${baseUrl}?text=${text} date:${filter}&lr=2`);
       };
     }
   
     function GM_addStyle(css) {
-      const style =
-        document.getElementById('GM_addStyleBy8626') ||
-        (function () {
-          const style = document.createElement('style');
-          style.type = 'text/css';
-          style.id = 'GM_addStyleBy8626';
-          document.head.appendChild(style);
-          return style;
-        })();
-      const sheet = style.sheet;
-      sheet.insertRule(css, (sheet.rules || sheet.cssRules || []).length);
+      const style = document.getElementById('GM_addStyleBy8626') || (() => {
+        const style = document.createElement('style');
+        style.id = 'GM_addStyleBy8626';
+        document.head.appendChild(style);
+        return style;
+      })();
+      style.sheet.insertRule(css, style.sheet.cssRules.length);
     }
   
     setTimeout(() => {
       const container = document.createElement('div');
-  
-      const lastDay = createFilterButton('День');
-      const lastMonth = createFilterButton('Месяц');
-      const lastSixMonth = createFilterButton('Полгода');
-      const lastYear = createFilterButton('Год');
-      const last10Year = createFilterButton('10 лет');
-  
-      container.appendChild(lastDay);
-      container.appendChild(lastMonth);
-      container.appendChild(lastSixMonth);
-      container.appendChild(lastYear);
-      container.appendChild(last10Year);
-  
-      addEventChangeParamsUrl(lastDay, 86400000);
-      addEventChangeParamsUrl(lastMonth, 2678400000);
-      addEventChangeParamsUrl(lastSixMonth, 2678400000 * 6);
-      addEventChangeParamsUrl(lastYear, 2678400000 * 12);
-      addEventChangeParamsUrl(last10Year, 2678400000 * 12 * 10);
-  
-      container.style.padding = '5px';
-      container.style.display = 'flex';
-      container.style.flexDirection = 'column';
-      container.style.top = '100px';
-      container.style.position = 'absolute';
-  
-      document.body.appendChild(container);
       container.id = 'script-search-for-date';
+      
+      const timeFilters = [
+        { text: 'День', ms: 86400000 },
+        { text: 'Месяц', ms: 2678400000 },
+        { text: 'Полгода', ms: 2678400000 * 6 },
+        { text: 'Год', ms: 2678400000 * 12 },
+        { text: '10 лет', ms: 2678400000 * 12 * 10 }
+      ];
+
+      timeFilters.forEach(filter => {
+        const button = createFilterButton(filter.text);
+        addEventChangeParamsUrl(button, filter.ms);
+        container.appendChild(button);
+      });
+
+      Object.assign(container.style, {
+        padding: '5px',
+        display: 'flex',
+        flexDirection: 'column',
+        top: '100px',
+        position: 'absolute'
+      });
+
+      document.body.appendChild(container);
   
       GM_addStyle(
         `#script-search-for-date > a {
